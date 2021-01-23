@@ -54,6 +54,17 @@ public class Model {
             return "Your Model Scored " + toRoll.size() + " successfull  wound(s)";
         }
     }
+    public String avgFight(Model target){
+        double hitChance = (6.0-(WSkill - 1.0))/6.0;
+        double expHit = (attack * 1.0) * hitChance;
+        
+        double woundChance = (6.0-((toWound(strength, target.getT()) - 1) * 1.0)) / 6.0;
+        double expWound = expHit * woundChance;
+
+        double APChance = (target.getSv() - 1)/6.0;
+        double expAP = APChance * expWound;
+        return "" + expAP;
+    }
     private int toWound(int Str, int Tgh){
         if(Str >= Tgh * 2){
             return 2;
