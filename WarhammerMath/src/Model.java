@@ -6,10 +6,10 @@ public class Model {
     private int strength;
     private int toughness;
     private int wound;
-    private int attack;
+    private String attack;
     private int lead;
     private int save;
-    public Model(int M, int WS, int BS, int S, int T, int W, int A, int Ld, int Sv){
+    public Model(int M, int WS, int BS, int S, int T, int W, String A, int Ld, int Sv){
         moveVal = M;
         WSkill = WS;
         BSkill = BS;
@@ -20,8 +20,27 @@ public class Model {
         lead = Ld;
         save = Sv;
     }
-    public String fight(Model target){
-        ArrayList<Integer> toRoll = Dice.rollDice(6, attack);
+    public String fight(Model target, int range, Weapon wpn){
+        int shots = Dice.extractString(attack);
+        int atkStrength = strength;
+        int AP = wpn.getAP();
+        if (wpn.getRange() < range){
+            return "Target not within range!";
+        }else if((!wpn.getType().equals("Melee") && !wpn.getType().equals("Pistol")) && range <= 1){
+            return "Weapon cannot be used in melee combat";
+        }
+        if(!wpn.getType().equals("Melee")){
+            shots = Dice.extractString(wpn.getShots());
+            atkStrength = Dice.extractString(wpn.getStrMod());
+        }else{
+            if(wpn.getDamage().charAt(0) == 'x'){
+                atkStrength *= Dice.extractString(wpn.getStrMod());
+            }else{
+                atkStrength += Dice.extractString(wpn.getStrMod());
+            }
+        }
+
+        ArrayList<Integer> toRoll = Dice.rollDice(6, shots);
         //Represents the Hit roll
         for(int i = 0; i < toRoll.size(); i++){
             if(toRoll.get(i) < WSkill){
@@ -34,7 +53,7 @@ public class Model {
         //Represents the wound rolls
         toRoll = Dice.rollDice(6, toRoll.size());
         for(int i = 0; i < toRoll.size(); i++){
-            if(toRoll.get(i) < toWound(strength, target.getT())){
+            if(toRoll.get(i) < toWound(atkStrength, target.getT())){
                 toRoll.remove(i);
             }
         }
@@ -44,7 +63,7 @@ public class Model {
         //Represents the Armor Saves
         toRoll = Dice.rollDice(6, toRoll.size());
         for(int i = 0; i < toRoll.size(); i++){
-            if(toRoll.get(i) < target.getSv()){
+            if(toRoll.get(i) < target.getSv() - AP){
                 toRoll.remove(i);
             }
         }
@@ -56,7 +75,7 @@ public class Model {
     }
     public String avgFight(Model target){
         double hitChance = (6.0-(WSkill - 1.0))/6.0;
-        double expHit = (attack * 1.0) * hitChance;
+        double expHit = (Dice.extractString(attack) * 1.0) * hitChance;
         
         double woundChance = (6.0-((toWound(strength, target.getT()) - 1) * 1.0)) / 6.0;
         double expWound = expHit * woundChance;
@@ -96,7 +115,7 @@ public class Model {
     public int getWnd(){
         return wound;
     }
-    public int getAtk(){
+    public String getAtk(){
         return attack;
     }
     public int getLd(){
